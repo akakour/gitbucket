@@ -1,23 +1,23 @@
 @(info: Option[Any])(implicit context: gitbucket.core.controller.Context)
-@import gitbucket.core.util.DatabaseConfig
-<!--====================================================================-->
-<!-- Services -->
-<!--====================================================================-->
+
+  <!--====================================================================-->
+  <!-- Services -->
+  <!--====================================================================-->
 <label class="strong">Services</label>
 <fieldset>
   <label class="checkbox">
-    <input type="checkbox" name="gravatar"@if(context.settings.gravatar){ checked}/>
+    <input type="checkbox" name="gravatar"@if(context.settings.gravatar) { checked}/>
     Use Gravatar for profile images
   </label>
 </fieldset>
-<!--====================================================================-->
-<!-- SSH access -->
-<!--====================================================================-->
+  <!--====================================================================-->
+  <!-- SSH access -->
+  <!--====================================================================-->
 <hr>
 <label class="strong">SSH access</label>
 <fieldset>
   <label class="checkbox">
-    <input type="checkbox" id="sshEnabled" name="ssh.enabled"@if(context.settings.ssh.enabled){ checked}/>
+    <input type="checkbox" id="sshEnabled" name="ssh.enabled"@if(context.settings.ssh.enabled) { checked}/>
     Enable SSH access to git repository
     <span class="muted normal">(Both SSH host and Base URL are required if SSH access is enabled)</span>
   </label>
@@ -38,16 +38,17 @@
     </div>
   </div>
 </div>
-<!--====================================================================-->
-<!-- Communication email -->
-<!--====================================================================-->
+  <!--====================================================================-->
+  <!-- Communication email -->
+  <!--====================================================================-->
 <hr>
 <label class="strong">Communication</label>
 <fieldset>
   <label class="checkbox">
-    <input type="checkbox" id="useSMTP" name="useSMTP" @if(context.settings.useSMTP){ checked}/>
+    <input type="checkbox" id="useSMTP" name="useSMTP" @if(context.settings.useSMTP) { checked}/>
     SMTP
-    <span class="muted normal">(Enable notification as well as SMTP configuration if you want to send notification email too)</span>
+    <span class="muted normal">
+      (Enable notification as well as SMTP configuration if you want to send notification email too)</span>
   </label>
 </fieldset>
 <div class="useSMTP">
@@ -80,13 +81,15 @@
   <div class="form-group">
     <label class="control-label col-md-2" for="smtpSsl">Enable SSL</label>
     <div class="col-md-10">
-      <input type="checkbox" id="smtpSsl" name="smtp.ssl"@if(context.settings.smtp.flatMap(_.ssl).getOrElse(false)){ checked}/>
+      <input type="checkbox" id="smtpSsl" name="smtp.ssl"@if(context.settings.smtp.flatMap(_.ssl).getOrElse(false)) {
+      checked}/>
     </div>
   </div>
   <div class="form-group">
     <label class="control-label col-md-2" for="smtpStarttls">Enable STARTTLS</label>
     <div class="col-md-10">
-      <input type="checkbox" id="smtpStarttls" name="smtp.starttls"@if(context.settings.smtp.flatMap(_.starttls).getOrElse(false)){ checked}/>
+      <input type="checkbox" id="smtpStarttls" name="smtp.starttls"@if(context.settings.smtp.flatMap(_.starttls).getOrElse(false)) {
+      checked}/>
     </div>
   </div>
   <div class="form-group">
@@ -107,25 +110,52 @@
     <input type="button" id="sendTestMail" value="Send"/>
   </div>
 </div>
-<!--====================================================================-->
-<!-- Notification email -->
-<!--====================================================================-->
+  <!--====================================================================-->
+  <!-- Notification wechat push -->
+  <!--====================================================================-->
+<hr>
+<label class="strong">Wechat Message</label>
+<fieldset>
+  <label class="checkbox">
+    <input type="checkbox" id="useWechatPlus" name="useWechatPlus" @if(context.settings.useWechatPlus) { checked}/>
+    Use Wechat Pushplus
+    <span class="muted normal">
+      (Enable notification as well as <a href="https://pushplus.hxtrip.com/">Push+</a> configuration if you want to send notification Wechat message too)</span>
+  </label>
+</fieldset>
+<div class="useWechatPlus">
+  <div class="form-group">
+    <label class="control-label col-md-2" for="wechatToekn">Pushplus token</label>
+    <div class="col-md-10">
+      <input type="text" id="wechatToekn" name="wechat.token" class="form-control" value="@context.settings.pushplus.map(_.token)"/>
+      <span id="error-wechat_token" class="error"></span>
+    </div>
+  </div>
+  <div class="text-right">
+    Send test wechat message to self :
+    <input type="button" id="sendTestWechat" value="Send"/>
+  </div>
+</div>
+  <!--====================================================================-->
+  <!-- Notification email -->
+  <!--====================================================================-->
 <hr>
 <label class="strong">Notifications</label>
 <fieldset>
   <label class="checkbox" for="notification">
-    <input type="checkbox" id="notification" name="notification"@if(context.settings.notification){ checked}/>
+    <input type="checkbox" id="notification" name="notification"@if(context.settings.notification) { checked}/>
     Send notifications
   </label>
 </fieldset>
-<!--====================================================================-->
-<!-- Web hook -->
-<!--====================================================================-->
+  <!--====================================================================-->
+  <!-- Web hook -->
+  <!--====================================================================-->
 <hr>
 <label class="strong">Web hook</label>
 <fieldset>
   <label class="checkbox" for="blockPrivateAddress">
-    <input type="checkbox" id="blockPrivateAddress" name="webhook.blockPrivateAddress"@if(context.settings.webHook.blockPrivateAddress){ checked}/>
+    <input type="checkbox" id="blockPrivateAddress" name="webhook.blockPrivateAddress"@if(context.settings.webHook.blockPrivateAddress) {
+    checked}/>
     Block sending to private addresses
   </label>
 </fieldset>
@@ -136,61 +166,87 @@
   </fieldset>
 </div>
 <script>
-$(function(){
-  $('#sendTestMail').click(function(){
-    var host        = $('#smtpHost'    ).val();
-    var port        = $('#smtpPort'    ).val();
-    var user        = $('#smtpUser'    ).val();
-    var password    = $('#smtpPassword').val();
-    var ssl         = $('#smtpSsl'     ).prop('checked');
-    var starttls    = $('#smtpStarttls').prop('checked');
-    var fromAddress = $('#fromAddress' ).val();
-    var fromName    = $('#fromName'    ).val();
-    var testAddress = $('#testAddress' ).val();
+        $(function () {
+          $('#sendTestMail').click(function () {
+            var host = $('#smtpHost').val();
+            var port = $('#smtpPort').val();
+            var user = $('#smtpUser').val();
+            var password = $('#smtpPassword').val();
+            var ssl = $('#smtpSsl').prop('checked');
+            var starttls = $('#smtpStarttls').prop('checked');
+            var fromAddress = $('#fromAddress').val();
+            var fromName = $('#fromName').val();
+            var testAddress = $('#testAddress').val();
 
-    if(host == ''){
-      alert('SMTP Host is required.');
-      $('#smtpHost').focus();
-    } else if(testAddress == ''){
-      alert('Destination is required.');
-      $('#testAddress').focus();
-    } else {
-      $.post('@context.path/admin/system/sendmail', {
-        'smtp.host': host,
-        'smtp.port': port,
-        'smtp.user': user,
-        'smtp.password': password,
-        'smtp.ssl': ssl,
-        'smtp.starttls': starttls,
-        'smtp.fromAddress': fromAddress,
-        'smtp.fromName': fromName,
-        'testAddress': testAddress
-      }, function(data, status){
-        if(data != ''){
-          alert(data);
-        }
-      });
-    }
-  });
+            if (host == '') {
+              alert('SMTP Host is required.');
+              $('#smtpHost').focus();
+            } else if (testAddress == '') {
+              alert('Destination is required.');
+              $('#testAddress').focus();
+            } else {
+              $.post('@context.path/admin/system/sendmail', {
+                'smtp.host': host,
+                'smtp.port': port,
+                'smtp.user': user,
+                'smtp.password': password,
+                'smtp.ssl': ssl,
+                'smtp.starttls': starttls,
+                'smtp.fromAddress': fromAddress,
+                'smtp.fromName': fromName,
+                'testAddress': testAddress
+              }, function (data, status) {
+                if (data != '') {
+                  alert(data);
+                }
+              });
+            }
+          });
 
-  $('#sshEnabled').change(function(){
-    $('.ssh input').prop('disabled', !$(this).prop('checked'));
-  }).change();
+          $('#sshEnabled').change(function () {
+            $('.ssh input').prop('disabled', !$(this).prop('checked'));
+          }).change();
 
-  $('#useSMTP').change(function(){
-    $('.useSMTP input').prop('disabled', !$(this).prop('checked'));
+          $('#useSMTP').change(function () {
+            $('.useSMTP input').prop('disabled', !$(this).prop('checked'));
 
-    // With only SMTP in current version, notification cannot be enabled if no communication channel exists
-    $('#notification').prop('disabled', !$(this).prop('checked'));
+            // With only SMTP in current version, notification cannot be enabled if no communication channel exists
+            $('#notification').prop('disabled', !$(this).prop('checked'));
 
-    if (!$(this).prop('checked')) {
-      // With only SMTP in current version, if SMTP is unchecked then we disable notification
-      $('#notification').prop('checked', false);
-    }
-  }).change();
+            if (!$(this).prop('checked')) {
+              // With only SMTP in current version, if SMTP is unchecked then we disable notification
+              $('#notification').prop('checked', false);
+            }
+          }).change();
 
-  $('#blockPrivateAddress').change(function(){
-    $('.webhook textarea').prop('disabled', !$(this).prop('checked'));
-  }).change();
-});
+          $('#blockPrivateAddress').change(function () {
+            $('.webhook textarea').prop('disabled', !$(this).prop('checked'));
+          }).change();
+        });
+        $(function () {
+          $('#sendTestWechat').click(function () {
+            var token = $('#wechatToekn').val();
+            $.post('@context.path/admin/system/sendwechat', {
+              'wechat.token': token
+            }, function (data, status) {
+              if (data != '') {
+                alert(data);
+              }
+            });
+          });
+
+          $('#sshEnabled').change(function () {
+            $('.ssh input').prop('disabled', !$(this).prop('checked'));
+          }).change();
+
+          $('#useWechatPlus').change(function () {
+            // With only SMTP in current version, notification cannot be enabled if no communication channel exists
+            $('#notification').prop('disabled', !$(this).prop('checked'));
+
+            if (!$(this).prop('checked')) {
+              // With only SMTP in current version, if SMTP is unchecked then we disable notification
+              $('#notification').prop('checked', false);
+            }
+          }).change();
+        });
 </script>

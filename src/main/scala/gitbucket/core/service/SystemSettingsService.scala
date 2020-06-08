@@ -1,6 +1,5 @@
 package gitbucket.core.service
 
-import javax.servlet.http.HttpServletRequest
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.oauth2.sdk.auth.Secret
 import com.nimbusds.oauth2.sdk.id.{ClientID, Issuer}
@@ -8,6 +7,8 @@ import gitbucket.core.service.SystemSettingsService._
 import gitbucket.core.util.ConfigUtil._
 import gitbucket.core.util.Directory._
 import gitbucket.core.util.SyntaxSugars._
+import javax.servlet.http.HttpServletRequest
+
 import scala.util.Using
 
 trait SystemSettingsService {
@@ -39,6 +40,13 @@ trait SystemSettingsService {
           smtp.starttls.foreach(x => props.setProperty(SmtpStarttls, x.toString))
           smtp.fromAddress.foreach(props.setProperty(SmtpFromAddress, _))
           smtp.fromName.foreach(props.setProperty(SmtpFromName, _))
+        }
+      }
+//      wechat push
+      props.setProperty(UseWechatPlus, settings.useWechatPlus.toString)
+      if (settings.useWechatPlus) {
+        settings.pushplus.foreach { pushplus =>
+          props.setProperty(WechatToken, pushplus.token)
         }
       }
       props.setProperty(LdapAuthentication, settings.ldapAuthentication.toString)
@@ -121,6 +129,14 @@ trait SystemSettingsService {
             )
           )
         } else None,
+        getValue(props, UseWechatPlus, getValue(props, Notification, false)),
+        if (getValue(props, UseWechatPlus, getValue(props, Notification, false))) {
+          Some(
+            Pushplus(
+              getValue(props, WechatToken, ""),
+            )
+          )
+        } else None,
         getValue(props, LdapAuthentication, false),
         if (getValue(props, LdapAuthentication, false)) {
           Some(
@@ -186,6 +202,8 @@ object SystemSettingsService {
     ssh: Ssh,
     useSMTP: Boolean,
     smtp: Option[Smtp],
+    useWechatPlus: Boolean,
+    pushplus: Option[Pushplus],
     ldapAuthentication: Boolean,
     ldap: Option[Ldap],
     oidcAuthentication: Boolean,
@@ -261,6 +279,10 @@ object SystemSettingsService {
     fromName: Option[String]
   )
 
+  case class Pushplus(
+    token: String
+  )
+
   case class Proxy(
     host: String,
     port: Int,
@@ -300,6 +322,8 @@ object SystemSettingsService {
   private val SmtpFromAddress = "smtp.from_address"
   private val SmtpFromName = "smtp.from_name"
   private val LdapAuthentication = "ldap_authentication"
+  private val UseWechatPlus = "useWechatPlus"
+  private val WechatToken = "wechat.token"
   private val LdapHost = "ldap.host"
   private val LdapPort = "ldap.port"
   private val LdapBindDN = "ldap.bindDN"

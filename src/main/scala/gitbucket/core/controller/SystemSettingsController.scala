@@ -2,6 +2,7 @@ package gitbucket.core.controller
 
 import java.io.FileInputStream
 
+import com.akakour.wechat.PushPlus
 import gitbucket.core.admin.html
 import gitbucket.core.plugin.PluginRegistry
 import gitbucket.core.service.SystemSettingsService._
@@ -61,6 +62,13 @@ trait SystemSettingsControllerBase extends AccountManagementControllerBase {
         "fromAddress" -> trim(label("FROM Address", optional(text()))),
         "fromName" -> trim(label("FROM Name", optional(text())))
       )(Smtp.apply)
+    ),
+    "useWechatPlus" -> trim(label("Use Wechat Pushplus", boolean())),
+    "wechat" -> optionalIfNotChecked(
+      "useWechatPlus",
+      mapping(
+        "token" -> trim(label("Pushplus token", text(required))),
+      )(Pushplus.apply)
     ),
     "ldapAuthentication" -> trim(label("LDAP", boolean())),
     "ldap" -> optionalIfNotChecked(
@@ -127,7 +135,15 @@ trait SystemSettingsControllerBase extends AccountManagementControllerBase {
     "testAddress" -> trim(label("", text(required)))
   )(SendMailForm.apply)
 
+  private val sendWechatMessageFrom = mapping(
+    "wechat" -> mapping(
+      "token" -> trim(label("Wechat Pushplus token", text(required)))
+    )(Pushplus.apply)
+  )(SendWechatMessageForm.apply)
+
   case class SendMailForm(smtp: Smtp, testAddress: String)
+
+  case class SendWechatMessageForm(pushplus: Pushplus)
 
   case class DataExportForm(tableNames: List[String])
 
@@ -327,6 +343,13 @@ trait SystemSettingsControllerBase extends AccountManagementControllerBase {
       case e: EmailException => s"[Error] ${e.getCause}"
       case e: Exception      => s"[Error] ${e.toString}"
     }
+  })
+
+  post("/admin/system/sendwechat", sendWechatMessageFrom)(adminOnly { sendWechatMessageFrom =>
+    val unit = new PushPlus()
+    unit.setToken(sendWechatMessageFrom.pushplus.token)
+    val str = unit.sendMessage("Test from gitbucket", "a test message from gitbucket", "", "")
+    str
   })
 
   get("/admin/plugins")(adminOnly {

@@ -72,7 +72,9 @@ libraryDependencies ++= Seq(
   "org.testcontainers"              % "postgresql"                   % "1.14.3" % "test",
   "net.i2p.crypto"                  % "eddsa"                        % "0.3.0",
   "is.tagomor.woothee"              % "woothee-java"                 % "1.11.0",
-  "org.ec4j.core"                   % "ec4j-core"                    % "0.0.3"
+  "org.ec4j.core"                   % "ec4j-core"                    % "0.0.3",
+  "com.alibaba"                   % "fastjson"                    % "1.2.12",
+  "org.projectlombok"               % "lombok"                       % "1.18.8"     % "provided"
 )
 
 // Compiler settings
